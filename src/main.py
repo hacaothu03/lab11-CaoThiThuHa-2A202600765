@@ -83,26 +83,27 @@ async def part3_testing():
     print("PART 3: Security Testing Pipeline")
     print("=" * 60)
 
-    from testing.testing import run_comparison, print_comparison, SecurityTestPipeline
-    from agents.agent import create_unsafe_agent
+    from testing.testing import SecurityTestPipeline
+    from guardrails.audit_log import AuditLogPlugin, MonitoringAlert
 
-    # TODO 10: Before vs after comparison
-    print("\n--- TODO 10: Before/After Comparison ---")
-    unprotected, protected = await run_comparison()
-    if unprotected and protected:
-        print_comparison(unprotected, protected)
-    else:
-        print("Complete TODO 10 to see the comparison.")
+    audit_logger = AuditLogPlugin()
+    monitor = MonitoringAlert(
+        min_total_entries=20,
+        blocked_rate_threshold=0.40,
+        error_count_threshold=2,
+    )
 
-    # TODO 11: Automated security pipeline
-    print("\n--- TODO 11: Security Test Pipeline ---")
-    agent, runner = create_unsafe_agent()
-    pipeline = SecurityTestPipeline(agent, runner)
+    print("\n--- TODO 10 + TODO 11: Assignment Security Pipeline ---")
+    pipeline = SecurityTestPipeline(audit_logger=audit_logger)
     results = await pipeline.run_all()
     if results:
         pipeline.print_report(results)
     else:
         print("Complete TODO 11 to see the pipeline report.")
+
+    audit_logger.export_json("audit_log.json")
+    print("Audit log exported: audit_log.json")
+    monitor.check_metrics(audit_logger.logs)
 
 
 def part4_hitl():
